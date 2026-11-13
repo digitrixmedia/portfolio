@@ -24,7 +24,7 @@ import {
 } from '../types/portfolio';
 import { INITIAL_PROJECTS } from '../data/projects';
 
-export const BOOTSTRAPPED_ADMIN_EMAIL = 'skylarkgroupindia@gmail.com';
+export const BOOTSTRAPPED_ADMIN_EMAIL = 'digitrixmedia.agency@gmail.com';
 
 export const DEFAULT_PROFILE_SETTINGS: ProfileSettings = {
   name: 'Shubh',
@@ -123,7 +123,11 @@ function mapDocToProject(id: string, data: Record<string, any>): Project {
  */
 export async function checkUserIsAdmin(user: User | null): Promise<boolean> {
   if (!user || !user.emailVerified) return false;
-  if (user.email?.toLowerCase() === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase()) {
+  const normalizedEmail = user.email?.toLowerCase() || '';
+  if (normalizedEmail === 'skylarkgroupindia@gmail.com') {
+    return false;
+  }
+  if (normalizedEmail === BOOTSTRAPPED_ADMIN_EMAIL.toLowerCase()) {
     // Also ensure /admins/{uid} doc exists for Storage & Firestore rules parity
     await ensureBootstrappedAdminDoc(user);
     return true;

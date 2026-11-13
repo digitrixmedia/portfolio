@@ -315,7 +315,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigate }) => {
                         autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="admin@digitrixmedia.com"
+                        placeholder="digitrixmedia.agency@gmail.com"
                         className="w-full bg-[#171717] border border-white/10 focus:border-[#C8FF00] pl-10 pr-4 py-3 rounded-lg text-sm text-white focus:outline-none transition-colors"
                       />
                     </div>
@@ -427,7 +427,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onNavigate }) => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@digitrixmedia.com"
+                      placeholder="digitrixmedia.agency@gmail.com"
                       className="w-full bg-[#171717] border border-white/10 focus:border-[#C8FF00] pl-10 pr-4 py-3 rounded-lg text-sm text-white focus:outline-none transition-colors"
                     />
                   </div>

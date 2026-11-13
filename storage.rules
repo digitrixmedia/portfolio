@@ -16,9 +16,14 @@ service firebase.storage {
 
     function isAdmin() {
       return isVerified() && (
-        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)) ||
-        firestore.exists(/databases/ai-studio-digitrixmediashu-2fffd353-8299-4e72-890c-d68d3cece459/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == 'skylarkgroupindia@gmail.com'
+        request.auth.token.email == 'digitrixmedia.agency@gmail.com' ||
+        (
+          request.auth.token.email != 'skylarkgroupindia@gmail.com' &&
+          (
+            firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)) ||
+            firestore.exists(/databases/ai-studio-digitrixmediashu-2fffd353-8299-4e72-890c-d68d3cece459/documents/admins/$(request.auth.uid))
+          )
+        )
       );
     }
 
