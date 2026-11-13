@@ -1,0 +1,67 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)) ||
+        firestore.exists(/databases/ai-studio-digitrixmediashu-2fffd353-8299-4e72-890c-d68d3cece459/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'skylarkgroupindia@gmail.com'
+      );
+    }
+
+    function isValidImage() {
+      return request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isValidVideo() {
+      return request.resource.size <= 150 * 1024 * 1024
+        && request.resource.contentType.matches('video/.*');
+    }
+
+    // Portfolio Thumbnails, Images, Gallery, Profile Images (Public Read, Admin Write/Delete)
+    match /portfolio/thumbnails/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidImage();
+      allow delete: if isAdmin();
+    }
+
+    match /portfolio/images/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidImage();
+      allow delete: if isAdmin();
+    }
+
+    match /portfolio/gallery/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidImage();
+      allow delete: if isAdmin();
+    }
+
+    match /portfolio/profile/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidImage();
+      allow delete: if isAdmin();
+    }
+
+    // Portfolio Videos (Public Read, Admin Write/Delete)
+    match /portfolio/videos/{fileName} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidVideo();
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,389 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "Authorized administrator registry document keyed by Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "email", "role", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Authenticated user profile with strict RBAC role field.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 256
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "viewer"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "email", "role", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Portfolio project category for gallery organization and filtering.",
+      "type": "object",
+      "properties": {
+        "categoryId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "pattern": "^[a-z0-9\\-]+$"
+        },
+        "sortOrder": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["categoryId", "name", "slug", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Portfolio showcase item supporting image, video, website, and gallery types.",
+      "type": "object",
+      "properties": {
+        "projectId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "clientName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "categoryId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "categoryName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "projectType": {
+          "type": "string",
+          "enum": ["image", "video", "website", "gallery"]
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "fullDescription": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "mediaUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "videoUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "videoUrls": {
+          "type": "array"
+        },
+        "websiteUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "instagramUrl": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "images": {
+          "type": "array"
+        },
+        "tags": {
+          "type": "array"
+        },
+        "deliverables": {
+          "type": "array"
+        },
+        "year": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "videoAspect": {
+          "type": "string",
+          "enum": ["16:9", "9:16"]
+        },
+        "isVerticalReel": {
+          "type": "boolean"
+        },
+        "gridSpan": {
+          "type": "string",
+          "enum": ["normal", "wide", "tall"]
+        },
+        "featured": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"]
+        },
+        "sortOrder": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "projectId",
+        "title",
+        "slug",
+        "clientName",
+        "categoryId",
+        "categoryName",
+        "projectType",
+        "description",
+        "thumbnailUrl",
+        "featured",
+        "status",
+        "sortOrder",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MediaAsset": {
+      "title": "MediaAsset",
+      "description": "Uploaded Firebase Storage asset metadata for the admin media library.",
+      "type": "object",
+      "properties": {
+        "mediaId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "storagePath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video"]
+        },
+        "contentType": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "size": {
+          "type": "number"
+        },
+        "uploadedBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["mediaId", "name", "storagePath", "url", "mediaType", "size", "uploadedBy", "createdAt"]
+    },
+    "ProfileSettings": {
+      "title": "ProfileSettings",
+      "description": "Public portfolio owner profile and contact settings.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "professionalTitle": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "profileImage": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "socialLinks": {
+          "type": "object"
+        },
+        "website": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "bio", "updatedAt"]
+    },
+    "WebsiteSettings": {
+      "title": "WebsiteSettings",
+      "description": "Public website presentation settings including hero text and branding accent.",
+      "type": "object",
+      "properties": {
+        "siteTitle": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "siteDescription": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "heroHeading": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "heroSubheading": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "availabilityText": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "accentColor": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["siteTitle", "heroHeading", "heroSubheading", "accentColor", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Trusted admin role documents keyed by user UID."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile records with strict owner/admin access."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Publicly readable portfolio categories managed by admins."
+    },
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Portfolio projects; published projects are publicly readable, drafts and writes require admin authorization."
+    },
+    "/media/{mediaId}": {
+      "schema": { "$ref": "#/entities/MediaAsset" },
+      "description": "Admin-only media library tracking Firebase Storage uploads."
+    },
+    "/settings/profile": {
+      "schema": { "$ref": "#/entities/ProfileSettings" },
+      "description": "Publicly readable owner profile and contact settings managed by admins."
+    },
+    "/settings/website": {
+      "schema": { "$ref": "#/entities/WebsiteSettings" },
+      "description": "Publicly readable site-wide hero and theme settings managed by admins."
+    }
+  }
+}

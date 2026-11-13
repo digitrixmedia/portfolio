@@ -1,0 +1,221 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net - Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerified() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'skylarkgroupindia@gmail.com'
+      );
+    }
+
+    // Validation Helpers
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['userId', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'email', 'role', 'createdAt'])
+        && isValidId(data.userId)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 256
+        && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    function isValidUser(data, uid) {
+      return data.keys().hasAll(['userId', 'email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['userId', 'email', 'role', 'createdAt', 'updatedAt'])
+        && data.userId == uid
+        && isValidId(data.userId)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 256
+        && data.role in ['admin', 'viewer']
+        && data.createdAt is timestamp
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['categoryId', 'name', 'slug', 'sortOrder', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['categoryId', 'name', 'slug', 'sortOrder', 'createdAt', 'updatedAt'])
+        && isValidId(data.categoryId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 80 && data.slug.matches('^[a-z0-9\\-]+$')
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 10000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidProject(data) {
+      return data.keys().hasAll([
+          'projectId', 'title', 'slug', 'clientName', 'categoryId', 'categoryName',
+          'projectType', 'description', 'thumbnailUrl', 'featured', 'status',
+          'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'projectId', 'title', 'slug', 'clientName', 'categoryId', 'categoryName',
+          'secondaryCategories', 'projectType', 'description', 'fullDescription',
+          'thumbnailUrl', 'mediaUrl', 'videoUrl', 'videoUrls', 'websiteUrl', 'instagramUrl', 'images',
+          'tags', 'deliverables', 'metrics', 'year', 'videoAspect', 'isVerticalReel',
+          'gridSpan', 'featured', 'status', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.projectId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 160
+        && data.slug is string && data.slug.size() >= 1 && data.slug.size() <= 160
+        && data.clientName is string && data.clientName.size() >= 1 && data.clientName.size() <= 120
+        && data.categoryId is string && data.categoryId.size() <= 128
+        && data.categoryName is string && data.categoryName.size() >= 1 && data.categoryName.size() <= 80
+        && data.projectType in ['image', 'video', 'website', 'gallery']
+        && data.description is string && data.description.size() <= 1000
+        && data.thumbnailUrl is string && data.thumbnailUrl.size() <= 1000
+        && data.featured is bool
+        && data.status in ['published', 'draft']
+        && data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 100000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (!('fullDescription' in data) || (data.fullDescription is string && data.fullDescription.size() <= 4000))
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() <= 1000))
+        && (!('videoUrl' in data) || (data.videoUrl is string && data.videoUrl.size() <= 1000))
+        && (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 1000))
+        && (!('instagramUrl' in data) || (data.instagramUrl is string && data.instagramUrl.size() <= 1000))
+        && (!('year' in data) || (data.year is string && data.year.size() <= 16))
+        && (!('videoAspect' in data) || data.videoAspect in ['16:9', '9:16'])
+        && (!('isVerticalReel' in data) || data.isVerticalReel is bool)
+        && (!('gridSpan' in data) || data.gridSpan in ['normal', 'wide', 'tall'])
+        && (!('images' in data) || (data.images is list && data.images.size() <= 30 && (data.images.size() == 0 || data.images[0] is string)))
+        && (!('videoUrls' in data) || (data.videoUrls is list && data.videoUrls.size() <= 20 && (data.videoUrls.size() == 0 || data.videoUrls[0] is string)))
+        && (!('tags' in data) || (data.tags is list && data.tags.size() <= 20 && (data.tags.size() == 0 || data.tags[0] is string)))
+        && (!('deliverables' in data) || (data.deliverables is list && data.deliverables.size() <= 20 && (data.deliverables.size() == 0 || data.deliverables[0] is string)))
+        && (!('secondaryCategories' in data) || (data.secondaryCategories is list && data.secondaryCategories.size() <= 10 && (data.secondaryCategories.size() == 0 || data.secondaryCategories[0] is string)))
+        && (!('metrics' in data) || (data.metrics is list && data.metrics.size() <= 10));
+    }
+
+    function isValidMediaAsset(data) {
+      return data.keys().hasAll(['mediaId', 'name', 'storagePath', 'url', 'mediaType', 'contentType', 'size', 'uploadedBy', 'createdAt'])
+        && data.keys().hasOnly(['mediaId', 'name', 'storagePath', 'url', 'mediaType', 'contentType', 'size', 'uploadedBy', 'createdAt'])
+        && isValidId(data.mediaId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 256
+        && data.storagePath is string && data.storagePath.size() >= 1 && data.storagePath.size() <= 512
+        && data.url is string && data.url.size() >= 1 && data.url.size() <= 1000
+        && data.mediaType in ['image', 'video']
+        && data.contentType is string && data.contentType.size() <= 128
+        && data.size is number && data.size >= 0
+        && data.uploadedBy is string && data.uploadedBy == request.auth.uid
+        && data.createdAt is timestamp;
+    }
+
+    function isValidProfileSettings(data) {
+      return data.keys().hasAll(['name', 'bio', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'professionalTitle', 'bio', 'profileImage', 'email', 'phone', 'whatsappNumber', 'socialLinks', 'website', 'updatedAt'])
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+        && data.bio is string && data.bio.size() <= 2000
+        && data.updatedAt is timestamp
+        && (!('professionalTitle' in data) || (data.professionalTitle is string && data.professionalTitle.size() <= 160))
+        && (!('profileImage' in data) || (data.profileImage is string && data.profileImage.size() <= 1000))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 256))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 40))
+        && (!('whatsappNumber' in data) || (data.whatsappNumber is string && data.whatsappNumber.size() <= 40))
+        && (!('website' in data) || (data.website is string && data.website.size() <= 500))
+        && (!('socialLinks' in data) || (data.socialLinks is map && data.socialLinks.keys().hasOnly(['instagram', 'linkedin', 'behance', 'website'])));
+    }
+
+    function isValidWebsiteSettings(data) {
+      return data.keys().hasAll(['siteTitle', 'heroHeading', 'heroSubheading', 'accentColor', 'updatedAt'])
+        && data.keys().hasOnly(['siteTitle', 'siteDescription', 'heroHeading', 'heroSubheading', 'availabilityText', 'accentColor', 'updatedAt'])
+        && data.siteTitle is string && data.siteTitle.size() >= 1 && data.siteTitle.size() <= 160
+        && data.heroHeading is string && data.heroHeading.size() >= 1 && data.heroHeading.size() <= 200
+        && data.heroSubheading is string && data.heroSubheading.size() <= 500
+        && data.accentColor is string && data.accentColor.size() >= 4 && data.accentColor.size() <= 20
+        && data.updatedAt is timestamp
+        && (!('siteDescription' in data) || (data.siteDescription is string && data.siteDescription.size() <= 500))
+        && (!('availabilityText' in data) || (data.availabilityText is string && data.availabilityText.size() <= 160));
+    }
+
+    // 1. Admins Collection (Strict Admin Only)
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && (isOwner(adminId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidId(adminId) && isValidAdmin(incoming()) && incoming().userId == adminId && incoming().createdAt == request.time;
+      allow update: if isAdmin() && isValidId(adminId) && isValidAdmin(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin() && isValidId(adminId);
+    }
+
+    // 2. Users Collection (Strict PII Isolation)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isVerified() && isValidId(userId) && isValidUser(incoming(), userId) && incoming().createdAt == request.time && (
+        (isOwner(userId) && incoming().role == 'viewer') || isAdmin()
+      );
+      allow update: if isAdmin() && isValidId(userId) && isValidUser(incoming(), userId) && incoming().createdAt == existing().createdAt && (!('updatedAt' in incoming()) || incoming().updatedAt == request.time);
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // 3. Categories Collection (Public Read, Admin Write)
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId);
+      allow list: if true;
+      allow create: if isAdmin() && isValidId(categoryId) && isValidCategory(incoming()) && incoming().categoryId == categoryId && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(categoryId) && isValidCategory(incoming()) && incoming().categoryId == existing().categoryId && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(categoryId);
+    }
+
+    // 4. Projects Collection (Published Public Read, Admin All Access)
+    match /projects/{projectId} {
+      allow get: if isValidId(projectId) && (existing().status == 'published' || isAdmin());
+      allow list: if existing().status == 'published' || isAdmin();
+      allow create: if isAdmin() && isValidId(projectId) && isValidProject(incoming()) && incoming().projectId == projectId && incoming().createdAt == request.time && incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(projectId) && isValidProject(incoming()) && incoming().projectId == existing().projectId && incoming().createdAt == existing().createdAt && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(projectId);
+    }
+
+    // 5. Media Library Collection (Admin Only)
+    match /media/{mediaId} {
+      allow get: if isAdmin() && isValidId(mediaId);
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidId(mediaId) && isValidMediaAsset(incoming()) && incoming().mediaId == mediaId && incoming().createdAt == request.time;
+      allow update: if isAdmin() && isValidId(mediaId) && isValidMediaAsset(incoming()) && incoming().mediaId == existing().mediaId && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin() && isValidId(mediaId);
+    }
+
+    // 6. Settings Collection (Public Read, Admin Write)
+    match /settings/{settingId} {
+      allow get: if settingId in ['profile', 'website'];
+      allow list: if true;
+      allow create: if isAdmin() && (
+        (settingId == 'profile' && isValidProfileSettings(incoming()) && incoming().updatedAt == request.time) ||
+        (settingId == 'website' && isValidWebsiteSettings(incoming()) && incoming().updatedAt == request.time)
+      );
+      allow update: if isAdmin() && (
+        (settingId == 'profile' && isValidProfileSettings(incoming()) && incoming().updatedAt == request.time) ||
+        (settingId == 'website' && isValidWebsiteSettings(incoming()) && incoming().updatedAt == request.time)
+      );
+      allow delete: if false;
+    }
+  }
+}
